@@ -36,12 +36,11 @@
         <hr />
     }
 
-
     @if (Model.Options.ShowMigrationStatus)
     {
         @if (!Model.DatabaseExists && !Model.PendingMigrations.Any())
         {
-            <h2>@Microsoft.AspNet.Diagnostics.Entity.Strings.FormatDatabaseErrorPage_NoDbOrMigrationsTitle(Model.Exception.Context.GetType().Name)</h2>
+            <h2>@Microsoft.AspNet.Diagnostics.Entity.Strings.FormatDatabaseErrorPage_NoDbOrMigrationsTitle(Model.ContextType.Name)</h2>
             <p>@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_NoDbOrMigrationsInfo</p>
             <code> @Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_AddMigrationCommand </code>
             <br />
@@ -52,74 +51,70 @@
         {
             if (Model.PendingMigrations.Any())
             {
-                <div>
-                    <h2>@Microsoft.AspNet.Diagnostics.Entity.Strings.FormatDatabaseErrorPage_Title(Model.Exception.Context.GetType().Name)</h2>
-                    <p>@Microsoft.AspNet.Diagnostics.Entity.Strings.FormatDatabaseErrorPage_PendingMigrationsInfo(Model.Exception.Context.GetType().Name)</p>
-                    <ul>
-                        @foreach (var migration in Model.PendingMigrations)
-                        {
-                            <li>@migration</li>
-                        }
-                    </ul>
-                    @if (Model.Options.EnableMigrationCommands)
+                <h2>@Microsoft.AspNet.Diagnostics.Entity.Strings.FormatDatabaseErrorPage_Title(Model.ContextType.Name)</h2>
+                <p>@Microsoft.AspNet.Diagnostics.Entity.Strings.FormatDatabaseErrorPage_PendingMigrationsInfo(Model.ContextType.Name)</p>
+                <ul>
+                    @foreach (var migration in Model.PendingMigrations)
                     {
-                        <p>
-                            <button id="applyMigrations" onclick="ApplyMigrations()">@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_ApplyMigrationsButton</button>
-                            <span id="applyMigrationsError" class="error"></span>
-                            <span id="applyMigrationsSuccess"></span>
-                        </p>
-                        <script>
-                            function ApplyMigrations() {
-                                applyMigrations.disabled = true;
-                                applyMigrationsError.innerHTML = "";
-                                applyMigrations.innerHTML = "@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_ApplyMigrationsButtonRunning";
-
-                                var req = new XMLHttpRequest();
-                                req.open("POST", "@Model.Options.MigrationsEndPointPath.Value", true);
-                                var params = "context=" + encodeURIComponent("@Model.Exception.Context.GetType().AssemblyQualifiedName");
-                                req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                                req.setRequestHeader("Content-length", params.length);
-                                req.setRequestHeader("Connection", "close");
-
-                                req.onload = function (e) {
-                                    if (req.status == 204) {
-                                        applyMigrations.innerHTML = "@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_ApplyMigrationsButtonDone";
-                                        applyMigrationsSuccess.innerHTML = "<a href='.'>@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_MigrationsAppliedRefresh</a>";
-                                    }
-                                    else {
-                                        ErrorApplyingMigrations();
-                                    }
-                                };
-
-                                req.onerror = function (e) {
-                                    ErrorApplyingMigrations();
-                                };
-
-                                req.send(params);
-                            }
-
-                            function ErrorApplyingMigrations() {
-                                applyMigrations.innerHTML = "@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_ApplyMigrationsButton";
-                                applyMigrationsError.innerHTML = "@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_ApplyMigrationsFailed";
-                                applyMigrations.disabled = false;
-                            }
-                </script>
+                        <li>@migration</li>
                     }
-                    <p>@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_HowToApplyFromCmd</p>
-                    <code>@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_UpdateDatabaseCommand</code>
-                    <hr />
-                </div>
+                </ul>
+                @if (Model.Options.EnableMigrationCommands)
+                {
+                    <p>
+                        <button id="applyMigrations" onclick="ApplyMigrations()">@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_ApplyMigrationsButton</button>
+                        <span id="applyMigrationsError" class="error"></span>
+                        <span id="applyMigrationsSuccess"></span>
+                    </p>
+                    <script>
+                        function ApplyMigrations() {
+                            applyMigrations.disabled = true;
+                            applyMigrationsError.innerHTML = "";
+                            applyMigrations.innerHTML = "@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_ApplyMigrationsButtonRunning";
+
+                            var req = new XMLHttpRequest();
+                            req.open("POST", "@Model.Options.MigrationsEndPointPath.Value", true);
+                            var params = "context=" + encodeURIComponent("@Model.ContextType.AssemblyQualifiedName");
+                            req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                            req.setRequestHeader("Content-length", params.length);
+                            req.setRequestHeader("Connection", "close");
+
+                            req.onload = function (e) {
+                                if (req.status == 204) {
+                                    applyMigrations.innerHTML = "@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_ApplyMigrationsButtonDone";
+                                    applyMigrationsSuccess.innerHTML = "<a href='.'>@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_MigrationsAppliedRefresh</a>";
+                                }
+                                else {
+                                    ErrorApplyingMigrations();
+                                }
+                            };
+
+                            req.onerror = function (e) {
+                                ErrorApplyingMigrations();
+                            };
+
+                            req.send(params);
+                        }
+
+                        function ErrorApplyingMigrations() {
+                            applyMigrations.innerHTML = "@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_ApplyMigrationsButton";
+                            applyMigrationsError.innerHTML = "@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_ApplyMigrationsFailed";
+                            applyMigrations.disabled = false;
+                        }
+                    </script>
+                }
+                <p>@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_HowToApplyFromCmd</p>
+                <code>@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_UpdateDatabaseCommand</code>
+                <hr />
             }
             else if (Model.PendingModelChanges)
             {
-                <div>
-                    <h2>@Microsoft.AspNet.Diagnostics.Entity.Strings.FormatDatabaseErrorPage_PendingChangesTitle(Model.Exception.Context.GetType().Name)</h2>
-                    <p>@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_PendingChangesInfo</p>
-                    <code>@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_AddMigrationCommand</code>
-                    <br />
-                    <code>@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_UpdateDatabaseCommand</code>
-                    <hr />
-                </div>
+                <h2>@Microsoft.AspNet.Diagnostics.Entity.Strings.FormatDatabaseErrorPage_PendingChangesTitle(Model.ContextType.Name)</h2>
+                <p>@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_PendingChangesInfo</p>
+                <code>@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_AddMigrationCommand</code>
+                <br />
+                <code>@Microsoft.AspNet.Diagnostics.Entity.Strings.DatabaseErrorPage_UpdateDatabaseCommand</code>
+                <hr />
             }
         }
     }

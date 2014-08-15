@@ -4,6 +4,7 @@
 using JetBrains.Annotations;
 using Microsoft.AspNet.Diagnostics.Entity;
 using Microsoft.AspNet.Diagnostics.Entity.Utilities;
+using Microsoft.AspNet.Builder;
 using System;
 
 namespace Microsoft.AspNet.Builder

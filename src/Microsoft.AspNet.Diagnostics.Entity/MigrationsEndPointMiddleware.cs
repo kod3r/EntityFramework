@@ -8,6 +8,7 @@ using Microsoft.AspNet.Http;
 using Microsoft.Data.Entity;
 using Microsoft.Data.Entity.Migrations.Infrastructure;
 using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.Logging;
 using System;
 using System.Threading.Tasks;
 
@@ -42,7 +43,7 @@ namespace Microsoft.AspNet.Diagnostics.Entity
                     var contextType = Type.GetType(contextTypeName);
 
                     // TODO Handle context not being registered in DI
-                    using (var db = (DbContext)context.ApplicationServices.GetService(contextType))
+                    using (var db = (DbContext)context.RequestServices.GetService(contextType))
                     {
                         var migrator = db.Configuration.Services.ServiceProvider.GetService<DbMigrator>();
                         migrator.UpdateDatabase();

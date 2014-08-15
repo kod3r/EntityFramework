@@ -126,7 +126,7 @@ namespace Microsoft.Data.Entity.Migrations.Infrastructure
                 migrations = HistoryRepository.Migrations;
                 historyRepositoryExists = true;
             }
-            catch (DataStoreException)
+            catch (DbException)
             {
                 // TODO: Log the exception message.
                 migrations = new IMigrationMetadata[0];
