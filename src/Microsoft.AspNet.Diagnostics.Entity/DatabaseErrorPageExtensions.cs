@@ -27,7 +27,9 @@ namespace Microsoft.AspNet.Builder
             string appMode = new AppProperties(builder.Properties).Get<string>(Constants.HostAppMode);
             bool isDevMode = string.Equals(Constants.DevMode, appMode, StringComparison.Ordinal);*/
             bool isDevMode = true;
-            return builder.Use(next => new DatabaseErrorPageMiddleware(next, options, isDevMode).Invoke);
+            //return builder.Use(next => new DatabaseErrorPageMiddleware(next, options, isDevMode).Invoke);
+
+            return builder.UseMiddleware<DatabaseErrorPageMiddleware>(options, isDevMode);
         }
     }
 }

@@ -15,7 +15,7 @@ namespace Microsoft.AspNet.Diagnostics.Entity
         {
             Check.NotNull(builder, "builder");
 
-            builder.ServiceCollection.AddScoped<ILoggerFactory, DataStoreErrorLoggerFactory>();
+            builder.ServiceCollection.AddScoped<ILoggerFactory, DataStoreErrorLoggerProvider>();
 
             return builder;
         }

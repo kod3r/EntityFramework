@@ -24,8 +24,9 @@ namespace Microsoft.AspNet.Diagnostics.Entity
     {
         private readonly RequestDelegate _next;
         private readonly DatabaseErrorPageOptions _options;
+        private readonly DataStoreErrorLoggerProvider _loggerProvider;
 
-        public DatabaseErrorPageMiddleware([NotNull] RequestDelegate next, [NotNull] DatabaseErrorPageOptions options, bool isDevMode)
+        public DatabaseErrorPageMiddleware([NotNull] RequestDelegate next, [NotNull] ILoggerFactory loggerFactory, [NotNull] DatabaseErrorPageOptions options, bool isDevMode)
         {
             Check.NotNull(next, "next");
             Check.NotNull(options, "options");
@@ -37,11 +38,16 @@ namespace Microsoft.AspNet.Diagnostics.Entity
 
             _next = next;
             _options = options;
+
+            _loggerProvider = new DataStoreErrorLoggerProvider();
+            loggerFactory.AddProvider(_loggerProvider);
         }
 
         public virtual async Task Invoke([NotNull] HttpContext context)
         {
             Check.NotNull(context, "context");
+
+            _loggerProvider.Logger = new DataStoreErrorLogger();
 
             try
             {
@@ -49,25 +55,21 @@ namespace Microsoft.AspNet.Diagnostics.Entity
             }
             catch (Exception ex)
             {
-                var loggerFactory = context.RequestServices.GetService<ILoggerFactory>();
-                var dataStoreLoggerFactory = loggerFactory as DataStoreErrorLoggerFactory;
-                if (dataStoreLoggerFactory != null && dataStoreLoggerFactory.Logger.LastError == ex)
+                if (_loggerProvider.Logger.LastError == ex)
                 {
-                    var dbContext = (DbContext)context.RequestServices.GetService(dataStoreLoggerFactory.Logger.LastErrorContextType);
+                    var dbContext = (DbContext)context.RequestServices.GetService(_loggerProvider.Logger.LastErrorContextType);
 
                     if (dbContext.Database is RelationalDatabase)
                     {
                         var databaseExists = dbContext.Database.AsRelational().Exists();
 
-                    var migrator = serviceProvider.GetService<DbMigrator>();
-                    // TODO GetPendingMigrations should handle database not existing (Issue #523)
-                    var pendingMigrations = databaseExists
-                        ? migrator.GetPendingMigrations().Select(m => m.MigrationId)
-                        : migrator.GetLocalMigrations().Select(m => m.MigrationId);
+                        var serviceProvider = dbContext.Configuration.Services.ServiceProvider;
 
-                        var migrator = serviceProvider.GetService<Migrator>();
-                        // TODO GetPendingMigrations should handle database not existing (Issue #523)
-                        var pendingMigrations = migrator.GetPendingMigrations().Select(m => m.MigrationId);
+                        var migrator = serviceProvider.GetService<DbMigrator>();
+
+                        var pendingMigrations = databaseExists
+                            ? migrator.GetPendingMigrations().Select(m => m.MigrationId)
+                            : migrator.GetLocalMigrations().Select(m => m.MigrationId);
 
                         var pendingModelChanges = true;
                         var differ = serviceProvider.GetService<ModelDiffer>();
@@ -85,7 +87,7 @@ namespace Microsoft.AspNet.Diagnostics.Entity
                             {
                                 Options = _options,
                                 Exception = ex,
-                                ContextType = dataStoreLoggerFactory.Logger.LastErrorContextType,
+                                ContextType = dbContext.GetType(),
                                 DatabaseExists = databaseExists,
                                 PendingMigrations = pendingMigrations,
                                 PendingModelChanges = pendingModelChanges

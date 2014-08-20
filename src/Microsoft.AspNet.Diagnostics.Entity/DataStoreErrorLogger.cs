@@ -9,12 +9,22 @@ namespace Microsoft.AspNet.Diagnostics.Entity
 {
     public class DataStoreErrorLogger : ILogger
     {
-        public Type LastErrorContextType { get; set; }
-        public Exception LastError { get; set; }
+        private Type _lastErrorContextType;
+        private Exception _lastError;
+
+        public Type LastErrorContextType
+        {
+            get { return _lastErrorContextType; }
+        }
+
+        public Exception LastError
+        {
+            get { return _lastError; }
+        }
 
         public IDisposable BeginScope(object state)
         {
-            return null;
+            return NullScope.Instance; 
         }
 
         public bool WriteCore(TraceType eventType, int eventId, object state, Exception exception, Func<object, Exception, string> formatter)
@@ -22,11 +32,22 @@ namespace Microsoft.AspNet.Diagnostics.Entity
             var errorState = state as DataStoreErrorLogState;
             if (errorState != null)
             {
-                LastError = exception;
-                LastErrorContextType = errorState.ContextType;
+                _lastError = exception;
+                _lastErrorContextType = errorState.ContextType;
             }
 
             return true;
         }
+
+        private class NullScope : IDisposable
+        {
+            public static NullScope Instance = new NullScope();
+
+            public void Dispose()
+            {
+                // intentionally does nothing 
+            }
+        }
+
     }
 }
